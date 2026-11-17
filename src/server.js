@@ -4,12 +4,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
-
+const errorHandler = require('./middlewares/error.middleware');
 
 connectDB();
 
 const app = express();
-
 
 app.use(helmet());
 app.use(cors());
@@ -20,9 +19,9 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/groups', require('./routes/group.routes'));
 app.use('/api/events', require('./routes/event.routes'));
 app.use('/api/albums', require('./routes/album.routes'));
-app.use('/api/poll', require('./routes/poll.routes'));
+app.use('/api/polls', require('./routes/poll.routes'));
 app.use('/api/tickets', require('./routes/ticket.routes'));
-
+app.use('/api/threads', require('./routes/thread.routes')); 
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -32,17 +31,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint introuvable' });
 });
 
-app.use((err, req, res, next) => {
-  if (err.code === 11000) {
-    return res.status(409).json({ error: 'Conflit : cette ressource existe déjà.' });
-  }
-  res.status(err.status || 400).json({ error: err.message || 'Erreur serveur' });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
